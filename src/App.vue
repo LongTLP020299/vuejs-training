@@ -1,28 +1,37 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <navbar-component></navbar-component>
+    <login-component @open-modal="openModal"></login-component>
+    <popup-component :email="email" v-show="showModal" @close-modal="showModal = false"></popup-component>
+    <footer-component></footer-component>
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
-
+import LoginComponent from './views/Login.vue'
+import NavbarComponent from './components/NavbarPage.vue';
+import FooterComponent from './components/FooterPage.vue';
+import PopupComponent from './components/PopupDemo.vue'
 export default {
-  name: 'App',
+  name: "app",
   components: {
-    HelloWorld
+    NavbarComponent,
+    LoginComponent,
+    FooterComponent,
+    PopupComponent
+  },
+  data() {
+    return {
+      showModal: false,
+      email: ''
+    }
+  },
+  methods: {
+    openModal: function (inputEmail) {
+      this.showModal = true
+      this.email = inputEmail;
+    }
   }
 }
 </script>
 
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
-</style>
