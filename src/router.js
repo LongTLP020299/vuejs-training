@@ -7,7 +7,7 @@ import ListNote from './views/ListNoteView.vue'
 
 const routes = [
   { path: '/login', component: Login },
-  { path: '/', component: Login },
+  { path: '/', component: ListNote },
   { path: '/createaccount', component: RegisterAccount },
   { path: '/listnote', component: ListNote },
   { path: '/:pathMatch(.*)*', component: NotFound }

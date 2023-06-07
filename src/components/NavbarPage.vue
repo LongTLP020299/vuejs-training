@@ -21,21 +21,42 @@
           <i class="text-white fas fa-bars"></i>
         </button>
       </div>
+      <div v-if="isLoggedIn"
+        class="w-full relative flex justify-between lg:w-auto lg:static lg:block lg:justify-start"
+      >
+        <a
+          class="text-sm font-bold leading-relaxed inline-block mr-4 py-2 whitespace-nowrap uppercase text-white"
+          href="#"
+          >Hello {{ displayName }}</a
+        >
+      </div>
+            <div v-if="isLoggedIn"
+        class="w-full relative flex justify-between lg:w-auto lg:static lg:block lg:justify-start"
+      >
+        <a
+          class="text-sm font-bold leading-relaxed inline-block mr-4 py-2 whitespace-nowrap uppercase text-white"
+          v-on:click="logout()"
+          >Logout</a
+        >
+      </div>
     </div>
   </nav>
 </template>
 <script>
+import { mapState } from 'vuex';
+import MixinValAcc from "../mixin/MxValidateAcc";
 export default {
   name: "NavbarComponent",
-  data() {
-    return {
-      // showMenu: false,
-    };
+  mixins: [MixinValAcc],
+  computed: {
+    ...mapState(['isLoggedIn','displayName']),
   },
   methods: {
     toggleNavbar: function () {
       //this.showMenu = !this.showMenu;
     },
+
   },
+
 };
 </script>

@@ -82,6 +82,7 @@
 import { db } from "@/firebase";
 import MixinValAcc from "../mixin/MxValidateAcc";
 import { collection, query, where, getDocs } from "firebase/firestore";
+ import { mapState } from 'vuex';
 export default {
   name: "LoginComponent",
   mixins: [MixinValAcc],
@@ -106,9 +107,9 @@ export default {
         const querySnapshot = await getDocs(condition);
         // Kiểm tra xem tài khoản đã tồn tại hay chưa
         if (querySnapshot.empty) {
-          console.log('Tài khoản không tồn tại!');
-          this.errors.email = "Email khong đã tồn tại";
-          this.isExistEmail = true;
+          alert('Email hoac password khong dung!');
+          //this.errors.email = "Email khong đã tồn tại";
+          //this.isExistEmail = true;
           return;
         }
         querySnapshot.forEach((doc) => {
@@ -117,13 +118,18 @@ export default {
         });
         console.log(this.user);
 
-        this.$cookies.set('username', this.user.displayName);
+        this.$cookies.set('displayName', this.user.displayName);
+        this.$cookies.set('isLoggedIn', true);
+        this.$cookies.set('email', this.user.email);
 
         this.$router.push("/listnote");
       } catch (error) {
         console.error("Lỗi đăng nhập:", error);
       }
     }
+  },
+  computed: {
+    ...mapState(['isLoggedIn','displayName']),
   },
 };
 </script>

@@ -52,7 +52,7 @@
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-gray-200">
-                    <tr>
+                    <tr v-for="note in listNote" :key="note.id">
                       <td
                         class="px-6 py-4 text-sm font-medium text-gray-800 whitespace-nowrap"
                       >
@@ -61,12 +61,12 @@
                       <td
                         class="px-6 py-4 text-sm text-gray-800 whitespace-nowrap"
                       >
-                        Jone Doe
+                        {{ note.dateNote }}
                       </td>
                       <td
                         class="px-6 py-4 text-sm text-gray-800 whitespace-nowrap"
                       >
-                        jonne62@gmail.com
+                        {{ note.contentNote }}
                       </td>
                       <td
                         class="px-6 py-4 text-sm font-medium text-right whitespace-nowrap"
@@ -84,17 +84,22 @@
                       </td>
                     </tr>
                     <tr class="text-center">
-                      <td  colspan="3">
-                        <p :show="False" class="text-red-600">
+                      <td colspan="3">
+                        <p v-if="noDataNote" class="text-red-600">
                           No data was found!
-                          <button class="underline">
-                            Create your first item
-                          </button>
                         </p>
                       </td>
                     </tr>
                   </tbody>
                 </table>
+                <div>
+                  <!-- Các phần tử và nút điều khiển khác trong component cha -->
+                  <button @click="openPopup">Create Note</button>
+                  <PopupRegisterComponent
+                    v-if="showPopup"
+                    @close="closePopup"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -104,9 +109,59 @@
   </main>
 </template>
 <script>
+import MixinValAcc from "../mixin/MxValidateAcc";
+import PopupRegisterComponent from "./PopupRegister.vue";
+import { db } from "@/firebase";
+import { collection, query, where, getDocs } from "firebase/firestore";
 export default {
   name: "ListNoteComponent",
-  data() {},
-  methods: {},
+  data() {
+    return {
+      showPopup: false,
+      listNote: [],
+      noDataNote: false
+    };
+  },
+  components: {
+    PopupRegisterComponent,
+  },
+  mixins: [MixinValAcc],
+
+  created() {
+    this.checkLogin();
+    this.getListNote(); 
+  },
+  // Các phương thức để hiển thị/ẩn form popup khi cần thiết
+  methods: {
+    openPopup() {
+      this.showPopup = true;
+    },
+    closePopup() {
+      this.showPopup = false;
+    },
+    async getListNote() {
+      const collectionRef = collection(db, "notes");
+      // điêu kiện
+      const condition = query(
+        collectionRef,
+        where("email", "==", this.$cookies.get("email"))
+      );
+      try {
+        const querySnapshot = await getDocs(condition);
+        // Kiểm tra xem tài khoản đã tồn tại hay chưa
+        if (querySnapshot.empty) {
+          console.log("Không có data!");
+          this.noDataNote = true;
+          return;
+        }
+        querySnapshot.forEach((doc) => {
+          // Lấy dữ liệu của mỗi document
+          this.listNote.push({ id: doc.id, ...doc.data() });
+        });
+      } catch (error) {
+        console.error("List note error:", error);
+      }
+    },
+  },
 };
 </script>

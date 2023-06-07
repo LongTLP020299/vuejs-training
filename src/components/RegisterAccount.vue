@@ -113,6 +113,7 @@
 import { db } from "@/firebase";
 import MixinValAcc from "../mixin/MxValidateAcc";
 import { collection, addDoc } from 'firebase/firestore';
+
 export default {
   name: "RegisterAccountComponent",
   mixins: [MixinValAcc],
@@ -121,6 +122,9 @@ export default {
       confirmPassword: "",
       
     };
+  },
+  mounted() {
+    this.logout;
   },
   methods: {
     async handleSubmit(event) {

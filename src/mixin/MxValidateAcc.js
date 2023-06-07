@@ -1,5 +1,7 @@
 import { db } from "@/firebase";
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { mapState } from 'vuex';
+import VueCookies from 'vue-cookies';
 
 const mixinValAcc = {
   data() {
@@ -12,29 +14,49 @@ const mixinValAcc = {
       isNameDirty: false,
       isPasswordDirty: false,
       isConfirmPasswordDirty: false,
-      errors: {},
+      errors: {}
     };
   },
   methods: {
+    
     async checkExistingAccount(email) {
-      const collectionRef = collection(db, 'users')
+      const collectionRef = collection(db, "users");
 
       // điêu kiện
-      const condition = query(collectionRef, where("email", "==", email))
+      const condition = query(collectionRef, where("email", "==", email));
       try {
         const querySnapshot = await getDocs(condition);
         if (querySnapshot.empty) {
-          console.log('Tài khoản không tồn tại!');
+          console.log("Tài khoản không tồn tại!");
           return false;
         } else {
-          console.log('Tài khoản tồn tại!');
+          console.log("Tài khoản tồn tại!");
           return true;
         }
       } catch (error) {
-        console.error('Error getting documents:', error)
+        console.error("Error getting documents:", error);
       }
     },
-    
+
+    checkLogin() {
+      
+
+      this.$store.commit('setDisplayName', this.$cookies.get('displayName'));
+      this.$store.commit('setIsLoggedIn', this.$cookies.get('isLoggedIn'));
+      this.$store.commit('setIsLoggedIn', this.$cookies.get('email'));
+      
+      // Kiểm tra nếu đã đăng nhập
+      if (this.isLoggedIn == false) {
+          this.$router.push("/login");
+      }
+    },
+
+    logout() {
+      VueCookies.remove('displayName');
+      VueCookies.remove('isLoggedIn');
+      VueCookies.remove('email');
+      this.$router.push("/login");
+    },
   },
   watch: {
     email() {
@@ -50,8 +72,12 @@ const mixinValAcc = {
     confirmPassword() {
       this.isConfirmPasswordDirty = true;
     },
+    note() {
+      this.isNoteDirty = true;
+    },
   },
   computed: {
+    ...mapState(['isLoggedIn','displayName']),
     isValidEmail() {
       // Validate email
       const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
@@ -88,10 +114,7 @@ const mixinValAcc = {
     },
     isValidFormLg() {
       // Kiểm tra tính hợp lệ của toàn bộ form
-      return (
-        this.isValidEmail &&
-        this.isValidPassword
-      );
+      return this.isValidEmail && this.isValidPassword;
     },
   },
 };
