@@ -60,7 +60,7 @@ export default {
     };
   },
   mounted() {
-    this.checkLogin();
+    if(this.checkLogin()) return;
     const currentDate = new Date().toISOString().slice(0, 16);
     this.dateNote = currentDate;
   },

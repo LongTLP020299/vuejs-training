@@ -43,10 +43,11 @@ const mixinValAcc = {
 
       this.$store.commit('setDisplayName', this.$cookies.get('displayName'));
       this.$store.commit('setIsLoggedIn', this.$cookies.get('isLoggedIn'));
-      this.$store.commit('setIsLoggedIn', this.$cookies.get('email'));
+      this.$store.commit('setEmail', this.$cookies.get('email'));
       
       // Kiểm tra nếu đã đăng nhập
-      if (this.isLoggedIn == false) {
+      if (!this.isLoggedIn) {
+          console.log(this.isLoggedIn);
           this.$router.push("/login");
       }
     },
@@ -55,6 +56,9 @@ const mixinValAcc = {
       VueCookies.remove('displayName');
       VueCookies.remove('isLoggedIn');
       VueCookies.remove('email');
+      this.$store.commit('setDisplayName', null);
+      this.$store.commit('setIsLoggedIn', false);
+      this.$store.commit('setEmail', null);
       this.$router.push("/login");
     },
   },

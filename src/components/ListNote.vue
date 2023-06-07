@@ -119,7 +119,7 @@ export default {
     return {
       showPopup: false,
       listNote: [],
-      noDataNote: false
+      noDataNote: false,
     };
   },
   components: {
@@ -128,8 +128,10 @@ export default {
   mixins: [MixinValAcc],
 
   created() {
-    this.checkLogin();
-    this.getListNote(); 
+    this.checkLogin()
+  },
+  mounted() {
+    this.getListNote();
   },
   // Các phương thức để hiển thị/ẩn form popup khi cần thiết
   methods: {
