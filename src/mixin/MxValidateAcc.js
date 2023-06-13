@@ -49,7 +49,9 @@ const mixinValAcc = {
       if (!this.isLoggedIn) {
           console.log(this.isLoggedIn);
           this.$router.push("/login");
+          return false;
       }
+      return true;
     },
 
     logout() {

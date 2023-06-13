@@ -15,6 +15,11 @@
             <div
               class="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded-lg bg-gray-300 border-0"
             >
+              <div>
+                <!-- Các phần tử và nút điều khiển khác trong component cha -->
+                <button @click="openPopup">Create Note</button>
+                <PopupRegisterComponent v-if="showPopup" @close="closePopup" />
+              </div>
               <div class="flex-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                   <thead class="bg-gray-50">
@@ -52,7 +57,7 @@
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-gray-200">
-                    <tr v-for="note in listNote" :key="note.id">
+                    <tr v-for="note in paginatedItems" :key="note.id">
                       <td
                         class="px-6 py-4 text-sm font-medium text-gray-800 whitespace-nowrap"
                       >
@@ -78,7 +83,7 @@
                       <td
                         class="px-6 py-4 text-sm font-medium text-right whitespace-nowrap"
                       >
-                        <a class="text-red-500 hover:text-red-700" href="#">
+                        <a class="text-red-500 hover:text-red-700" @click="deleteNote($event,  note.id )">
                           Delete
                         </a>
                       </td>
@@ -92,13 +97,37 @@
                     </tr>
                   </tbody>
                 </table>
-                <div>
-                  <!-- Các phần tử và nút điều khiển khác trong component cha -->
-                  <button @click="openPopup">Create Note</button>
-                  <PopupRegisterComponent
-                    v-if="showPopup"
-                    @close="closePopup"
-                  />
+                <div class="flex items-center justify-center mt-4">
+                  <nav class="flex space-x-2">
+                    <button
+                      class="px-3 py-1 rounded-md bg-gray-200 text-gray-800 hover:bg-gray-300"
+                      :disabled="currentPage === 1"
+                      @click="previousPage"
+                    >
+                      Previous
+                    </button>
+                    <div
+                      v-for="pageNumber in pageDisplayNumbers"
+                      :key="pageNumber"
+                    >
+                      <button
+                        class="px-3 py-1 rounded-md bg-gray-200 text-gray-800 hover:bg-gray-300"
+                        :class="{
+                          'bg-gray-500 text-white': pageNumber === currentPage,
+                        }"
+                        @click="goToPage(pageNumber)"
+                      >
+                        {{ pageNumber }}
+                      </button>
+                    </div>
+                    <button
+                      class="px-3 py-1 rounded-md bg-gray-200 text-gray-800 hover:bg-gray-300"
+                      :disabled="currentPage === totalPages"
+                      @click="nextPage"
+                    >
+                      Next
+                    </button>
+                  </nav>
                 </div>
               </div>
             </div>
@@ -112,7 +141,7 @@
 import MixinValAcc from "../mixin/MxValidateAcc";
 import PopupRegisterComponent from "./PopupRegister.vue";
 import { db } from "@/firebase";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, orderBy, doc, deleteDoc } from "firebase/firestore";
 export default {
   name: "ListNoteComponent",
   data() {
@@ -120,6 +149,11 @@ export default {
       showPopup: false,
       listNote: [],
       noDataNote: false,
+      currentPage: 1,
+      itemsPage: 2,
+      totalPages: 0,
+      pageDisplay: 3,
+      pageDisplayNumbers: [],
     };
   },
   components: {
@@ -128,41 +162,105 @@ export default {
   mixins: [MixinValAcc],
 
   created() {
-    this.checkLogin()
+    if (!this.checkLogin()) {
+      return;
+    }
   },
-  mounted() {
-    this.getListNote();
+  async mounted() {
+    await this.getListNote();
+    this.calculatePageDisplay();
   },
-  // Các phương thức để hiển thị/ẩn form popup khi cần thiết
   methods: {
     openPopup() {
       this.showPopup = true;
     },
     closePopup() {
       this.showPopup = false;
+      this.renderPageListNote();
     },
+    async renderPageListNote() {
+      this.listNote = [];
+      await this.getListNote();
+    },
+    async deleteNote(event, id) {
+      console.log(id);
+      const collectionRef = collection(db, "notes");
+      const documentRef = doc(collectionRef, id);
+      try {
+        await deleteDoc(documentRef);
+        this.renderPageListNote();
+      } catch (error) {
+        console.error("List note error:", error);
+      }
+    },
+    //updateNote(id) {},
+    // Get data
     async getListNote() {
       const collectionRef = collection(db, "notes");
       // điêu kiện
       const condition = query(
         collectionRef,
-        where("email", "==", this.$cookies.get("email"))
+        where("email", "==", this.$cookies.get("email")),
+        orderBy("dateNote", "desc")
       );
       try {
-        const querySnapshot = await getDocs(condition);
+        const lstNote = await getDocs(condition);
         // Kiểm tra xem tài khoản đã tồn tại hay chưa
-        if (querySnapshot.empty) {
+        if (lstNote.empty) {
           console.log("Không có data!");
           this.noDataNote = true;
           return;
         }
-        querySnapshot.forEach((doc) => {
+        lstNote.forEach((doc) => {
           // Lấy dữ liệu của mỗi document
           this.listNote.push({ id: doc.id, ...doc.data() });
         });
+        
       } catch (error) {
         console.error("List note error:", error);
       }
+    },
+    nextPage() {
+      if (this.currentPage < this.totalPages) {
+        this.currentPage++;
+        this.calculatePageDisplay();
+      }
+    },
+    previousPage() {
+      if (this.currentPage > 1) {
+        this.currentPage--;
+        this.calculatePageDisplay();
+      }
+    },
+
+    //Click page hien thi tren man hinh
+    goToPage(pageNumber) {
+      this.currentPage = pageNumber;
+    },
+
+    // Tinh toan de hien thi page khi click nut next and previous
+    calculatePageDisplay() {
+      this.totalPages = Math.ceil(this.listNote.length / this.itemsPage);
+      const startPage = Math.max(
+        this.currentPage - Math.floor(this.pageDisplay / 2),
+        1
+      );
+      const endPage = startPage + this.pageDisplay - 1;
+      this.pageDisplayNumbers = [];
+
+      for (let i = startPage; i <= endPage; i++) {
+        if (i <= this.totalPages) {
+          this.pageDisplayNumbers.push(i);
+        }
+      }
+    },
+  },
+  computed: {
+    // Get data theo số record cho 1 page
+    paginatedItems() {
+      const startIndex = (this.currentPage - 1) * this.itemsPage;
+      const endIndex = startIndex + this.itemsPage;
+      return this.listNote.slice(startIndex, endIndex);
     },
   },
 };

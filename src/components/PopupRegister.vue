@@ -3,7 +3,7 @@
     class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50"
   >
     <div class="w-2/4 bg-white p-6 rounded-md shadow-md">
-      <h2 class="text-lg font-bold mb-4">Form Popup</h2>
+      <h2 class="text-lg font-bold mb-4">Form Create Note</h2>
       <!-- Các trường nhập liệu và các nút điều khiển form -->
       <form @submit="createNote">
         <div class="relative w-full mb-4">
@@ -27,9 +27,7 @@
             placeholder="Note"
             style="transition: all 0.15s ease 0s"
           />
-          <span class="text-red-600" v-if="!isNoteDirty">{{
-            errors
-          }}</span>
+          <span class="text-red-600" v-if="!isNoteDirty">{{ errors }}</span>
         </div>
         <div class="text-center mt-6">
           <button
@@ -41,13 +39,20 @@
           </button>
         </div>
       </form>
+      <button
+        class="bg-gray-900 text-white active:bg-gray-700 text-sm font-bold uppercase px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 w-full"
+        style="transition: all 0.15s ease 0s"
+        @click="closePP"
+      >
+        CANCEL
+      </button>
     </div>
   </div>
 </template>
 <script>
 import { db } from "@/firebase";
 import MixinValAcc from "../mixin/MxValidateAcc";
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc } from "firebase/firestore";
 export default {
   name: "PopupRegisterComponent",
   mixins: [MixinValAcc],
@@ -56,11 +61,11 @@ export default {
       dateNote: "",
       note: "",
       isNoteDirty: false,
-      errors: ""
+      errors: "",
     };
   },
   mounted() {
-    if(this.checkLogin()) return;
+    if (!this.checkLogin()) return;
     const currentDate = new Date().toISOString().slice(0, 16);
     this.dateNote = currentDate;
   },
@@ -76,29 +81,26 @@ export default {
   methods: {
     async createNote(event) {
       event.preventDefault();
-      
-      const collectionRef = collection(db, 'notes');
+
+      const collectionRef = collection(db, "notes");
       try {
         if (this.isNoteDirty == false) return;
         const newData = {
           dateNote: this.dateNote,
           contentNote: this.note,
-          email: this.$cookies.get('email')
+          email: this.$cookies.get("email"),
         };
         const newDocRef = await addDoc(collectionRef, newData);
 
-        console.log('Dữ liệu đã được thêm vào với ID:', newDocRef.id);
+        console.log("Dữ liệu đã được thêm vào với ID:", newDocRef.id);
         this.$emit("close");
-        this.$router.push("/listnote");
-
       } catch (error) {
-        console.error(
-          "Lỗi khi lưu thông tin note vào Firestore:",
-          error
-        );
+        console.error("Lỗi khi lưu thông tin note vào Firestore:", error);
       }
     },
+    closePP() {
+      this.$emit("close");
+    },
   },
-    
 };
 </script>

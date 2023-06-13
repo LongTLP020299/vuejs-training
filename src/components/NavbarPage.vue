@@ -8,35 +8,35 @@
       <div
         class="w-full relative flex justify-between lg:w-auto lg:static lg:block lg:justify-start"
       >
-        <a
+        <p
           class="text-sm font-bold leading-relaxed inline-block mr-4 py-2 whitespace-nowrap uppercase text-white"
-          href="#"
-          >Note My Self</a
+          >Note My Self</p
         >
-        <button
-          class="cursor-pointer text-xl leading-none px-3 py-1 border border-solid border-transparent rounded bg-transparent block lg:hidden outline-none focus:outline-none"
-          type="button"
-          v-on:click="toggleNavbar()"
-        >
-          <i class="text-white fas fa-bars"></i>
-        </button>
       </div>
       <div v-if="isLoggedIn"
         class="w-full relative flex justify-between lg:w-auto lg:static lg:block lg:justify-start"
       >
-        <a
+        <p
           class="text-sm font-bold leading-relaxed inline-block mr-4 py-2 whitespace-nowrap uppercase text-white"
-          href="#"
-          >Hello {{ displayName }}</a
+          >Hello {{ displayName }}</p
         >
       </div>
-            <div v-if="isLoggedIn"
+      <div v-if="isLoggedIn"
         class="w-full relative flex justify-between lg:w-auto lg:static lg:block lg:justify-start"
       >
-        <a
+        <button
           class="text-sm font-bold leading-relaxed inline-block mr-4 py-2 whitespace-nowrap uppercase text-white"
           v-on:click="logout()"
-          >Logout</a
+          >Logout</button
+        >
+      </div>
+      <div v-else
+        class="w-full relative flex justify-between lg:w-auto lg:static lg:block lg:justify-start"
+      >
+        <button
+          class="text-sm font-bold leading-relaxed inline-block mr-4 py-2 whitespace-nowrap uppercase text-white"
+          v-on:click="login()"
+          >Login</button
         >
       </div>
     </div>
@@ -52,8 +52,8 @@ export default {
     ...mapState(['isLoggedIn','displayName']),
   },
   methods: {
-    toggleNavbar: function () {
-      //this.showMenu = !this.showMenu;
+    login() {
+      this.$router.push("/login");
     },
 
   },

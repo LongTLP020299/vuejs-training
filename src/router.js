@@ -9,7 +9,8 @@ const routes = [
   { path: '/login', component: Login },
   { path: '/', component: ListNote },
   { path: '/createaccount', component: RegisterAccount },
-  { path: '/listnote', component: ListNote },
+  { path: '/listnote/:page', component: ListNote },
+  { path: '/listnote/', component: ListNote },
   { path: '/:pathMatch(.*)*', component: NotFound }
 ];
 
