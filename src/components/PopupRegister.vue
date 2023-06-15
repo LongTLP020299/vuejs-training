@@ -5,7 +5,7 @@
     <div class="w-2/4 bg-white p-6 rounded-md shadow-md">
       <h2 class="text-lg font-bold mb-4">Form Create Note</h2>
       <!-- Các trường nhập liệu và các nút điều khiển form -->
-      <form @submit="createNote">
+      <form @submit="handleNotes">
         <div class="relative w-full mb-4">
           <label class="block uppercase text-gray-700 text-xs font-bold mb-2"
             >Time Create</label
@@ -21,7 +21,7 @@
           <label class="block uppercase text-gray-700 text-xs font-bold mb-2"
             >Note</label
           ><textarea
-            v-model="note"
+            v-model="contentNote"
             type="text"
             class="peer border-0 px-3 py-3 placeholder-gray-400 text-gray-700 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full"
             placeholder="Note"
@@ -35,7 +35,7 @@
             type="submit"
             style="transition: all 0.15s ease 0s"
           >
-            Create Note
+            {{ mode === "create" ? "Create Note" : "Update Note" }}
           </button>
         </div>
       </form>
@@ -52,47 +52,84 @@
 <script>
 import { db } from "@/firebase";
 import MixinValAcc from "../mixin/MxValidateAcc";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, doc, addDoc, updateDoc } from "firebase/firestore";
 export default {
   name: "PopupRegisterComponent",
   mixins: [MixinValAcc],
+  props: {
+    mode: {
+      type: String,
+      required: true,
+      validator: (value) => {
+        return value === "create" || value === "update";
+      },
+    },
+    initDataNote: {
+      type: Object,
+      default: null,
+    },
+  },
   data() {
     return {
       dateNote: "",
-      note: "",
+      contentNote: "",
       isNoteDirty: false,
       errors: "",
+      modifiedInitDataNote: null,
     };
   },
   mounted() {
     if (!this.checkLogin()) return;
     const currentDate = new Date().toISOString().slice(0, 16);
     this.dateNote = currentDate;
+
+    if (this.mode === "update" && this.initDataNote != null) {
+      this.modifiedInitDataNote = { ...this.initDataNote };
+      this.modifiedInitDataNote.dateNote = this.dateNote;
+      this.contentNote = this.modifiedInitDataNote.contentNote;
+    }
   },
   watch: {
-    note() {
-      if (this.note.length < 8) {
+    contentNote() {
+      if (this.contentNote.length < 8) {
         this.errors = "Note khong the it hon 8 ky tu!";
+        this.isNoteDirty = false;
       } else {
         this.isNoteDirty = true;
       }
     },
   },
   methods: {
-    async createNote(event) {
+    async handleNotes(event) {
       event.preventDefault();
 
       const collectionRef = collection(db, "notes");
       try {
-        if (this.isNoteDirty == false) return;
-        const newData = {
-          dateNote: this.dateNote,
-          contentNote: this.note,
-          email: this.$cookies.get("email"),
-        };
-        const newDocRef = await addDoc(collectionRef, newData);
+        if (this.mode === "create") {
+          if (this.isNoteDirty == false) return;
+          const newData = {
+            dateNote: this.dateNote,
+            contentNote: this.contentNote,
+            email: this.$cookies.get("email"),
+          };
+          const newDocRef = await addDoc(collectionRef, newData);
 
-        console.log("Dữ liệu đã được thêm vào với ID:", newDocRef.id);
+          console.log("Dữ liệu đã được thêm vào với ID:", newDocRef.id);
+        } else if (this.mode === "update") {
+          
+          if (this.isNoteDirty == false) return;
+
+          const noteDocRef = doc(collectionRef, this.initDataNote.id);
+          this.modifiedInitDataNote.contentNote = this.contentNote;
+
+          await updateDoc(noteDocRef, this.modifiedInitDataNote);
+
+          console.log(
+            "Dữ liệu đã được update vào với ID:",
+            this.modifiedInitDataNote.id
+          );
+        }
+
         this.$emit("close");
       } catch (error) {
         console.error("Lỗi khi lưu thông tin note vào Firestore:", error);
